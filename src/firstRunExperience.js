@@ -354,12 +354,18 @@ export function initFirstRunExperience({
   // military sites. `?welcome=1` still reveals the card for demos.
   const params = new URLSearchParams(location?.search || '');
   if (params.get('welcome') !== '1') {
-    if (!hasStoredLayerPrefs(storage) && dataManager) {
-      void runFirstRunChoice(PLAY_DEFAULT_MISSION, {
-        setContextMode: async () => ({ ok: true }),
-        setLayerEnabled: (layerId) => dataManager.setEnabled(layerId, true, { origin: 'user' }),
-        flyToGlobe: () => styleManager.resetToGlobeView(),
-      });
+    if (dataManager) {
+      void (async () => {
+        try {
+          await dataManager.setEnabled('earthquakes', true, { origin: 'user' });
+        } catch { /* feed optional */ }
+        try {
+          await styleManager.resetToGlobeView();
+        } catch { /* framing optional */ }
+        setTimeout(() => {
+          void dataManager.setEnabled('local-firms', true, { origin: 'user' }).catch(() => {});
+        }, 3000);
+      })();
     }
     rememberFirstRunSessionDismissed(sessionStorageRef);
     root.remove();

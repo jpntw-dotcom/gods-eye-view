@@ -19,9 +19,7 @@ import { registerDataCredits } from './data/dataCredits.js';
 import { SceneDirector } from './scenes/director.js';
 import { initGevVoiceCommands } from './voice/gevRealtime.js';
 import { MapStackController } from './mapStackController.js';
-import { initAnnotations } from './annotations/index.js';
 import { initLogoGaze } from './logoGaze.js';
-import { initCockpitCloudEffects } from './cockpitCloudEffects.js';
 import {
   installRenderGovernor,
   getRenderGovernorDiagnostics,
@@ -36,6 +34,7 @@ import {
   applyPlayGlobeSurface,
   createOsmImageryOptions,
   hidePlayLoader,
+  playAllowPhotorealFromLocation,
   resolvePlayGlobeSurface,
   shouldInitVoiceOnPlayStart,
 } from './playGlobe.js';
@@ -92,16 +91,19 @@ async function init() {
     // must not abort boot — OSM / keyless globe is the fallback. Do not add a
     // key here.
     const googleApiKey = import.meta.env.GOOGLE_MAPS_API_KEY;
-    if (googleApiKey) {
+    const allowPhotoreal = playAllowPhotorealFromLocation(window.location);
+    if (googleApiKey && allowPhotoreal) {
       Cesium.GoogleMaps.defaultApiKey = googleApiKey;
       window.__GOOGLE_MAPS_API_KEY__ = googleApiKey;
     }
 
-    // First paint must be a visible earth. Creating the Viewer with
-    // `baseLayer: false` and hiding the globe (the photoreal path) leaves a
-    // white void when Google tiles never arrive. Resolve the surface before
-    // any tileset await so keyless / failed-key hosts still get OSM.
-    const initialSurface = resolvePlayGlobeSurface({ googleApiKey, tileset: null });
+    // First paint must be a visible earth. Photoreal hides the ellipsoid.
+    // Default play never takes that path (iframe referrer vs key lock = white).
+    const initialSurface = resolvePlayGlobeSurface({
+      googleApiKey,
+      tileset: null,
+      allowPhotoreal,
+    });
     const osmBaseLayer = initialSurface.attachOsmImagery
       ? new Cesium.ImageryLayer(
         new Cesium.OpenStreetMapImageryProvider(createOsmImageryOptions()),
@@ -135,10 +137,12 @@ async function init() {
         document.body.appendChild(el);
         return el;
       })(),
-      msaaSamples: 4,
+      msaaSamples: 1,
+      requestRenderMode: true,
+      maximumRenderTimeChange: Infinity,
       contextOptions: {
         webgl: {
-          preserveDrawingBuffer: true,
+          preserveDrawingBuffer: false,
         },
       },
     });
@@ -150,7 +154,12 @@ async function init() {
     // designed against wall-clock time, not frame count. Measured on the
     // 2026-08-05 perf investigation as a strict halving of idle burn on
     // 120 Hz hardware; a no-op on 60 Hz displays. (perf item 2)
-    viewer.targetFrameRate = 60;
+    viewer.targetFrameRate = 30;
+    if (viewer.scene?.globe) {
+      viewer.scene.globe.maximumScreenSpaceError = 4;
+      viewer.scene.globe.tileCacheSize = 100;
+      viewer.scene.globe.preloadSiblings = false;
+    }
 
     // Register per-layer data attribution into the "Data attribution" popover.
     // Required by each source's license (ODbL, CC BY-NC-SA, NASA FIRMS, etc.);
@@ -187,19 +196,18 @@ async function init() {
     hidePlayLoader(loadingScreen);
 
     let tileset = null;
-    if (!googleApiKey) {
+    if (!allowPhotoreal) {
+      loaderStatus.textContent = 'OSM globe...';
+    } else if (!googleApiKey) {
       loaderStatus.textContent = 'No Google Maps key — starting keyless OSM globe...';
     } else {
       loaderStatus.textContent = 'Loading Google 3D Tiles...';
       try {
-        // Load Google Photorealistic 3D Tiles
         tileset = await Cesium.createGooglePhotorealistic3DTileset({
           onlyUsingWithGoogleGeocoder: true,
         });
         viewer.scene.primitives.add(tileset);
-        // NOTE: Cesium World Terrain intentionally disabled — conflicts with Google 3D Tiles at high zoom.
-        // Google Photorealistic 3D Tiles provide their own terrain/elevation.
-        applyPlayGlobeSurface(viewer, resolvePlayGlobeSurface({ googleApiKey, tileset }), {
+        applyPlayGlobeSurface(viewer, resolvePlayGlobeSurface({ googleApiKey, tileset, allowPhotoreal }), {
           toColor: (css) => Cesium.Color.fromCssColorString(css),
         });
       } catch (tileError) {
@@ -207,7 +215,7 @@ async function init() {
         const tileErrorDetail = describeError(tileError);
         loaderStatus.textContent = `Google 3D Tiles unavailable (${tileErrorDetail}). Continuing in fallback mode...`;
         tileset = null;
-        applyPlayGlobeSurface(viewer, resolvePlayGlobeSurface({ googleApiKey, tileset: null }), {
+        applyPlayGlobeSurface(viewer, resolvePlayGlobeSurface({ googleApiKey, tileset: null, allowPhotoreal }), {
           toColor: (css) => Cesium.Color.fromCssColorString(css),
         });
       }
@@ -215,10 +223,11 @@ async function init() {
 
     loaderStatus.textContent = 'Initializing systems...';
 
+    const playSurface = resolvePlayGlobeSurface({ googleApiKey, tileset, allowPhotoreal });
     const mapStackController = new MapStackController(viewer, {
       googleTileset: tileset,
       cesiumToken,
-      initialStack: resolvePlayGlobeSurface({ googleApiKey, tileset }).initialStack,
+      initialStack: playSurface.initialStack,
       // Task 5 (height-datum fix): rebroadcast stack changes as a window
       // CustomEvent so data layers (CCTV per-regime ground resolution) can
       // react without coupling MapStackController to layer modules. Fires on
@@ -229,10 +238,7 @@ async function init() {
       },
       onError: (message) => console.warn('[MapStack]', message),
     });
-    await mapStackController.setStack(
-      resolvePlayGlobeSurface({ googleApiKey, tileset }).initialStack,
-      { silent: true },
-    );
+    await mapStackController.setStack(playSurface.initialStack, { silent: true });
 
     // Initialize the style manager (post-processing, HUD, locations, share links)
     const styleManager = new StyleManager(viewer, { mapStackController });
@@ -240,7 +246,7 @@ async function init() {
     // clouds use a separate, capped low-resolution GPU pass that never attaches
     // Cesium fog or post-process stages and is fully stopped in map mode.
     const weatherEffects = null;
-    const cockpitCloudEffects = initCockpitCloudEffects(viewer);
+    const cockpitCloudEffects = null;
 
     if (styleManager.hasShareState) {
       loaderStatus.textContent = 'Restoring shared view...';
@@ -286,7 +292,7 @@ async function init() {
     const sceneDirector = new SceneDirector(viewer, styleManager, dataManager);
 
     // Initialize the voice "whiteboard" annotation engine (world-space renderer)
-    const annotations = initAnnotations({ viewer, tileset });
+    const annotations = null;
 
     // Loader already yielded when the earth appeared. First-run still waits
     // for share restore so a shared view is not overwritten, but it must not
@@ -302,10 +308,10 @@ async function init() {
     // its chance to register pre-install holds. (perf wave 2)
     installRenderGovernor(viewer);
 
-    // The explicit scope mask replaces the emergent six-pass artifact —
-    // see src/scopeMask.js. Installed before the UI so the DISPLAY-rail
-    // toggle finds it live.
-    installScopeMask(viewer);
+    // Play: no circular scope mask. Extra full-viewport pass eats the iframe.
+    if (allowPhotoreal) {
+      installScopeMask(viewer);
+    }
 
     // The follow camera recomputes the tracked target's dead-reckon position
     // every frame — tracking anything is a per-frame animation. (perf wave 2)

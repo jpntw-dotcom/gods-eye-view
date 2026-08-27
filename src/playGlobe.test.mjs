@@ -17,6 +17,7 @@ import {
   playBootLayersAreSafe,
   resolvePlayGlobeSurface,
   shouldInitVoiceOnPlayStart,
+  playAllowPhotorealFromLocation,
 } from './playGlobe.js';
 
 test('keyless first paint is a shown OSM earth, never a hidden globe without imagery', () => {
@@ -41,15 +42,23 @@ test('blank, missing, and define-fallthrough Google keys are not usable', () => 
   }
 });
 
-test('photoreal may hide the ellipsoid only when a live tileset exists', () => {
-  const ready = resolvePlayGlobeSurface({ googleApiKey: 'AIza-real', tileset: { id: 'tiles' } });
+test('photoreal may hide the ellipsoid only when explicitly allowed and a live tileset exists', () => {
+  const ready = resolvePlayGlobeSurface({ googleApiKey: 'AIza-real', tileset: { id: 'tiles' }, allowPhotoreal: true });
   assert.equal(ready.showGlobe, false);
   assert.equal(ready.hideGlobe, true);
   assert.equal(ready.imagery, 'photoreal');
   assert.equal(ready.attachOsmImagery, false);
   assert.equal(ready.initialStack, 'photoreal');
 
-  const keyedButNoTiles = resolvePlayGlobeSurface({ googleApiKey: 'AIza-real', tileset: null });
+  const keyedDefaultPlay = resolvePlayGlobeSurface({
+    googleApiKey: 'AIza-reject-default-play',
+    tileset: { id: 'tiles' },
+  });
+  assert.equal(keyedDefaultPlay.showGlobe, true);
+  assert.equal(keyedDefaultPlay.attachOsmImagery, true);
+  assert.equal(keyedDefaultPlay.initialStack, 'osm');
+
+  const keyedButNoTiles = resolvePlayGlobeSurface({ googleApiKey: 'AIza-real', tileset: null, allowPhotoreal: true });
   assert.equal(keyedButNoTiles.showGlobe, true);
   assert.equal(keyedButNoTiles.attachOsmImagery, true);
   assert.equal(keyedButNoTiles.initialStack, 'osm');
@@ -69,7 +78,7 @@ test('applyPlayGlobeSurface never leaves globe.show false without photoreal', ()
   assert.equal(globe.baseColor, `color:${PLAY_EARTH_BASE_COLOR}`);
   assert.deepEqual(colors, [PLAY_EARTH_BASE_COLOR]);
 
-  const photoreal = resolvePlayGlobeSurface({ googleApiKey: 'AIza-real', tileset: {} });
+  const photoreal = resolvePlayGlobeSurface({ googleApiKey: 'AIza-real', tileset: {}, allowPhotoreal: true });
   applyPlayGlobeSurface({ scene: { globe } }, photoreal, { toColor: (css) => css });
   assert.equal(globe.show, false);
 });
@@ -172,4 +181,10 @@ test('the repo does not ship Google or FIRMS secrets', () => {
   const main = fs.readFileSync(new URL('./main.js', import.meta.url), 'utf8');
   assert.doesNotMatch(main, /AIza[0-9A-Za-z_-]{20,}/);
   assert.doesNotMatch(main, /FIRMS_MAP_KEY\s*=\s*['"][^'"]+['"]/);
+});
+
+test('photoreal is opt-in via query, never the play default', () => {
+  assert.equal(playAllowPhotorealFromLocation({ search: '' }), false);
+  assert.equal(playAllowPhotorealFromLocation({ search: '?welcome=1' }), false);
+  assert.equal(playAllowPhotorealFromLocation({ search: '?photoreal=1' }), true);
 });

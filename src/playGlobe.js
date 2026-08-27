@@ -71,8 +71,22 @@ export function hasUsableGoogleKey(key) {
  *   baseColorCss: string | null,
  * }}
  */
-export function resolvePlayGlobeSurface({ googleApiKey, tileset } = {}) {
-  const hasPhotoreal = hasUsableGoogleKey(googleApiKey) && Boolean(tileset);
+/**
+ * Photoreal 3D tiles are opt-in on play (`?photoreal=1`). A Maps key with a
+ * bad referrer (iframe parent vs 1stari.com) still returns a tileset object,
+ * then paints nothing. Hiding the ellipsoid at that point is a white void.
+ * Default play therefore stays on OSM.
+ */
+export function playAllowPhotorealFromLocation(location = globalThis.location) {
+  try {
+    return new URLSearchParams(location?.search || '').get('photoreal') === '1';
+  } catch {
+    return false;
+  }
+}
+
+export function resolvePlayGlobeSurface({ googleApiKey, tileset, allowPhotoreal = false } = {}) {
+  const hasPhotoreal = allowPhotoreal && hasUsableGoogleKey(googleApiKey) && Boolean(tileset);
   if (hasPhotoreal) {
     return {
       showGlobe: false,

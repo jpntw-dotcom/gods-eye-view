@@ -9197,6 +9197,7 @@ html.play-skin #cesiumContainer {
   width: 100%;
   height: 100%;
   height: 100dvh;
+  background: #1a4a7a;
 }
 
 html.play-skin #style-indicator,
