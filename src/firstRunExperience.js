@@ -19,10 +19,14 @@
 // Choosing a mission is deliberately NOT durable suppression: picking a mission
 // is enthusiasm, not "never show me this again".
 
+import { LAYER_STATE_STORAGE_KEY, parseStoredLayerState } from './data/layerState.js';
+
 /** Durable suppression. Written ONLY by the "Don't show this again" checkbox. */
 export const FIRST_RUN_STORAGE_KEY = 'gev:first-run-mission:v1';
 /** Per-session dismissal. Written by every close path; scoped to sessionStorage. */
 export const FIRST_RUN_SESSION_KEY = 'gev:first-run-mission-session:v1';
+/** Play-skin default: Environmental. Do not start from Contacts. */
+export const PLAY_DEFAULT_MISSION = 'environmental';
 
 /**
  * Configurable name for the fires/quakes mission. Flip this ONE constant to
@@ -239,6 +243,16 @@ export function rememberFirstRunSessionDismissed(sessionStorageRef) {
 }
 
 /**
+ * Whether a saved layer set already owns this browser. Play-skin auto-run
+ * must not rewrite a visitor who already chose (or restored) layers.
+ * @param {{getItem?: Function}|null|undefined} storage
+ * @returns {boolean}
+ */
+export function hasStoredLayerPrefs(storage) {
+  return parseStoredLayerState(readStored('local', storage, LAYER_STATE_STORAGE_KEY)) != null;
+}
+
+/**
  * Run a launcher choice against the app's existing internal APIs.
  *
  * A failed mission is NOT closed: the visitor can retry or fall back to manual
@@ -329,6 +343,24 @@ export function initFirstRunExperience({
     sessionStorageRef,
     location,
   })) {
+    root.remove();
+    return null;
+  }
+
+  // AlsDitDan play skin: skip the mission card and enable Environmental
+  // (earthquakes + local-firms). Never offer Live Contacts — that path
+  // calls setContextMode('contacts') and lights military flights + OSM
+  // military sites. `?welcome=1` still reveals the card for demos.
+  const params = new URLSearchParams(location?.search || '');
+  if (params.get('welcome') !== '1') {
+    if (!hasStoredLayerPrefs(storage) && dataManager) {
+      void runFirstRunChoice(PLAY_DEFAULT_MISSION, {
+        setContextMode: async () => ({ ok: true }),
+        setLayerEnabled: (layerId) => dataManager.setEnabled(layerId, true, { origin: 'user' }),
+        flyToGlobe: () => styleManager.resetToGlobeView(),
+      });
+    }
+    rememberFirstRunSessionDismissed(sessionStorageRef);
     root.remove();
     return null;
   }

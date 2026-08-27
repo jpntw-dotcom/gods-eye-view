@@ -7361,6 +7361,11 @@ export default defineConfig(({ mode }) => {
       openAiRealtimeProxy(),
       googlePlacesContextProxy(),
     ],
+    // AlsDitDan /globe iframes this app. CSP frame-ancestors is the
+    // clickjacking control: allow the parent + localhost embedders, nobody
+    // else. X-Frame-Options cannot allowlist multiple parents (only DENY /
+    // SAMEORIGIN / obsolete ALLOW-FROM), so it is omitted on purpose —
+    // SAMEORIGIN would block https://alsditdan.com.
     server: {
       host: env.HOST || 'localhost',
       port: parseInt(env.PORT, 10) || 5173,
@@ -7368,6 +7373,14 @@ export default defineConfig(({ mode }) => {
       allowedHosts: (env.HOST === '0.0.0.0' || env.HOST === '::')
         ? true
         : ['localhost', '127.0.0.1', '.local'],
+      headers: {
+        'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
+      },
+    },
+    preview: {
+      headers: {
+        'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
+      },
     },
     // Expose selected API keys to the browser via import.meta.env.*
     define: {

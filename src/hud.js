@@ -68,7 +68,9 @@ export class IntelHUD {
   constructor(viewer) {
     this.viewer = viewer;
     this._visible = false;
-    this._autoMode = true; // auto show/hide based on style
+    // AlsDitDan play skin: never auto-paint the classification HUD.
+    // CRT/NVG/FLIR must not surface TOP SECRET banners on this fork.
+    this._autoMode = false;
     this._currentStyle = 'normal';
     this._el = null;
     this._variant = 'tactical';
@@ -738,7 +740,7 @@ export class IntelHUD {
       this._el.style.setProperty('--hud-border', colors.border);
     }
 
-    // Auto show/hide
+    // Auto show/hide — disabled on this play skin (see constructor).
     if (this._autoMode) {
       if (MILITARY_STYLES.has(styleName)) {
         this.show();
@@ -750,11 +752,8 @@ export class IntelHUD {
 
   /** Make the HUD visible and immediately refresh all readouts. */
   show() {
-    this._visible = true;
-    if (this._el) this._el.classList.add('active');
-    this._updateCameraData(); // immediate update
-    this._markSummaryDirty();
-    void this._updateSummary(false, true);
+    // Play skin: force off so military styles never paint TOP SECRET.
+    this.hide();
   }
 
   /** Hide the HUD overlay. */
@@ -780,15 +779,10 @@ export class IntelHUD {
    *   show/hide; `'on'`/`'off'` force visibility and disable auto-mode.
    */
   setMode(mode) {
-    if (mode === 'auto') {
-      this._autoMode = true;
-      this.onStyleChange(this._currentStyle);
-      return;
-    }
-
+    // Play skin: ignore on/auto — classification banners stay off.
+    void mode;
     this._autoMode = false;
-    if (mode === 'on') this.show();
-    else this.hide();
+    this.hide();
   }
 
   /**

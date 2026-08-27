@@ -1,6 +1,5 @@
 import { createLocalGeoJsonLayer } from './localGeojson.js';
 import { createFirmsHeatmapLayer } from './firmsHeatmap.js';
-import submarineCablesLayer from './telegeographySubmarineCables.js';
 
 // Use Vite's ?url import to properly resolve these assets in dev and build
 import datacentersUrl from './local_data/datacenters/datacenters.geojsonl?url';
@@ -47,6 +46,7 @@ const fires = createFirmsHeatmapLayer({
 export default [
   datacenters,
   dams,
-  submarineCablesLayer,
+  // TeleGeography submarine cables (CC BY-NC-SA 3.0) are not registered on
+  // this AlsDitDan fork — see LICENSE carve-out and PLAY.md.
   fires,
 ];
