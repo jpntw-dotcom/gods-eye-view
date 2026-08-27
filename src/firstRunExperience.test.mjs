@@ -427,9 +427,10 @@ test('play skin auto-runs Environmental and never starts from Contacts', () => {
   assert.deepEqual(FIRST_RUN_MISSIONS.environmental.layerIds, ['earthquakes', 'local-firms']);
   const module = fs.readFileSync(new URL('./firstRunExperience.js', import.meta.url), 'utf8');
   const init = module.slice(module.indexOf('export function initFirstRunExperience'));
+  const uncommented = init.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
   assert.match(init, /runFirstRunChoice\(PLAY_DEFAULT_MISSION/);
-  assert.doesNotMatch(init, /setContextMode\('contacts'\)/);
-  assert.doesNotMatch(init, /setContextMode\('space-missions'\)/);
+  assert.doesNotMatch(uncommented, /setContextMode\('contacts'\)/);
+  assert.doesNotMatch(uncommented, /setContextMode\('space-missions'\)/);
   assert.match(init, /params\.get\('welcome'\) !== '1'/);
   assert.equal(hasStoredLayerPrefs(memoryStorage('gev:layer-state:v2')), false);
 });
@@ -543,8 +544,9 @@ test('no mission writes a preference the visitor did not choose by picking it', 
   // missions — the globe missions open no panel at all.
   const panelWrites = code.match(/setPanelCollapsed/g) || [];
   assert.equal(panelWrites.length, 1, 'exactly one panel reveal, on the Context path');
-  const contextPath = code.slice(code.indexOf('setContextMode: async (mode)'), code.indexOf('setLayerEnabled:'));
-  assert.match(contextPath, /result\?\.ok[\s\S]*?setPanelCollapsed\?\.\('global-context-panel', false, \{ explicit: true \}\)/);
+  const contextPath = code.slice(code.indexOf('setContextMode: async (mode)'));
+  const cardDeps = contextPath.slice(0, contextPath.indexOf('setLayerEnabled:'));
+  assert.match(cardDeps, /result\?\.ok[\s\S]*?setPanelCollapsed\?\.\('global-context-panel', false, \{ explicit: true \}\)/);
 });
 
 test('the decision table is written down where the next editor will read it', () => {
