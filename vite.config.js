@@ -7374,12 +7374,12 @@ export default defineConfig(({ mode }) => {
         ? true
         : ['localhost', '127.0.0.1', '.local'],
       headers: {
-        'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
+        'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com https://www.alsditdan.com https://alsditdan.nl https://www.alsditdan.nl http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
       },
     },
     preview: {
       headers: {
-        'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
+        'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com https://www.alsditdan.com https://alsditdan.nl https://www.alsditdan.nl http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
       },
     },
     // Expose selected API keys to the browser via import.meta.env.*
