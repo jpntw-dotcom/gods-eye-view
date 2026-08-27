@@ -24,17 +24,17 @@ export const PLAY_DEFERRED_LAYER_IDS = Object.freeze([
 ]);
 
 /** Ocean fill so the ellipsoid is an earth before the first OSM tile lands. */
-export const PLAY_EARTH_BASE_COLOR = '#1a4a7a';
+export const PLAY_EARTH_BASE_COLOR = '#0b1220';
 
-export const PLAY_OSM_CREDIT = '© OpenStreetMap contributors';
+export const PLAY_OSM_CREDIT = '© OpenStreetMap contributors © CARTO';
 
-export const PLAY_OSM_TILE_URL = 'https://tile.openstreetmap.org/';
+export const PLAY_OSM_TILE_URL = 'https://a.basemaps.cartocdn.com/dark_all/';
 
 /** Full-earth framing. The earth is the thing you drag — not Austin close-up. */
 export const PLAY_GLOBE_CAMERA = Object.freeze({
   longitude: 10,
   latitude: 20,
-  heightM: 18_000_000,
+  heightM: 24_000_000,
   pitchDeg: -90,
 });
 
