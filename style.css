@@ -9162,8 +9162,8 @@ body.scene-playback-mode #first-run-launcher {
   .first-run-choices { scroll-behavior: auto; }
 }
 
-/* AlsDitDan play skin — unused chrome + classification HUD off.
-   Do not restyle the rest of this file. */
+/* AlsDitDan play skin: unused chrome + classification HUD off.
+   Do not restyle the rest of this file except this block. */
 body.play-skin #loading-screen {
   pointer-events: none;
 }
@@ -9178,4 +9178,158 @@ body.play-skin #loading-screen {
 #cctv-panel,
 #cctv-sync-chip {
   display: none !important;
+}
+
+html.play-skin,
+html.play-skin body {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background: #0a0b0d;
+  --accent: #8fb8c2;
+  --accent-glow: rgba(143, 184, 194, 0.35);
+  --font-sans: 'Gothic A1', 'Inter', system-ui, sans-serif;
+}
+
+html.play-skin #cesiumContainer {
+  width: 100%;
+  height: 100%;
+  height: 100dvh;
+}
+
+html.play-skin #style-indicator,
+html.play-skin #command-dock,
+html.play-skin #left-panel-stack,
+html.play-skin #right-context-rail,
+html.play-skin #pp-toggles,
+html.play-skin #param-slider-panel,
+html.play-skin #traffic-sync-chip,
+html.play-skin #clean-view-exit,
+html.play-skin #view-switcher,
+html.play-skin #cockpit-hud,
+html.play-skin #safe-frame-overlay,
+html.play-skin #scene-runtime,
+html.play-skin .cesium-viewer-toolbar,
+html.play-skin .cesium-viewer-animationContainer,
+html.play-skin .cesium-viewer-timelineContainer,
+html.play-skin .cesium-viewer-fullscreenContainer,
+html.play-skin .cesium-viewer-vrButton,
+html.play-skin .cesium-viewer-geocoderContainer,
+html.play-skin .cesium-viewer-homeButton,
+html.play-skin .cesium-viewer-sceneModePicker,
+html.play-skin .cesium-navigationHelpButton-wrapper,
+html.play-skin .cesium-viewer-infoBox,
+html.play-skin .cesium-viewer-selectionIndicator {
+  display: none !important;
+}
+
+html.play-embed #title-bar {
+  display: none !important;
+}
+
+html.play-skin #title-bar {
+  top: max(12px, env(safe-area-inset-top));
+  left: max(12px, env(safe-area-inset-left));
+  max-width: min(52vw, 22rem);
+  pointer-events: none;
+}
+
+html.play-skin #title-bar .title-glow {
+  display: none;
+}
+
+html.play-skin #title-bar h1 {
+  font-family: 'Gothic A1', system-ui, sans-serif;
+  font-weight: 800;
+  font-size: clamp(0.95rem, 2.1vw, 1.2rem);
+  letter-spacing: -0.03em;
+  color: #d1d5db;
+}
+
+html.play-skin #title-bar .title-accent,
+html.play-skin #title-bar .subtitle {
+  color: #8fb8c2;
+}
+
+html.play-skin #title-bar .subtitle {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-top: 0.25rem;
+}
+
+html.play-skin #top-center-actions {
+  top: max(10px, env(safe-area-inset-top));
+}
+
+html.play-skin #top-center-actions button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+html.play-embed #clear-selected-layers,
+html.play-embed #share-btn {
+  display: none !important;
+}
+
+html.play-skin #global-loading-status {
+  background: #151618;
+  border: 1px solid rgba(143, 184, 194, 0.22);
+  color: #8fb8c2;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+html.play-skin #loading-screen {
+  background: #0a0b0d;
+}
+
+html.play-skin #loading-screen h2 {
+  font-family: 'Gothic A1', system-ui, sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+  color: #d1d5db;
+}
+
+html.play-skin #loading-screen .title-accent {
+  color: #8fb8c2;
+}
+
+html.play-skin .cesium-widget-credits {
+  opacity: 0.5;
+  transform: scale(0.86);
+  transform-origin: bottom left;
+  filter: grayscale(0.4);
+}
+
+@media (max-width: 720px) {
+  html.play-skin #title-bar {
+    max-width: 64vw;
+  }
+  html.play-skin #title-bar h1 {
+    font-size: 0.92rem;
+  }
+  html.play-skin #top-center-actions {
+    gap: 0.2rem;
+  }
+}
+
+@media (max-height: 520px) {
+  html.play-skin #title-bar {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html.play-skin #title-bar,
+  html.play-skin #top-center-actions,
+  html.play-skin #loading-screen {
+    transition: none !important;
+    animation: none !important;
+  }
 }

@@ -39,7 +39,9 @@ import {
   resolvePlayGlobeSurface,
   shouldInitVoiceOnPlayStart,
 } from './playGlobe.js';
+import { installPlaySkin } from './playSkin.js';
 
+installPlaySkin();
 initLogoGaze();
 
 /**
