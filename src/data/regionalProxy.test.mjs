@@ -34,6 +34,7 @@ test('new data proxies install the same routes in dev and preview servers', () =
   const config = createViteConfig({ mode: 'test' });
   const byName = new Map(config.plugins.map((plugin) => [plugin.name, plugin]));
   for (const name of [
+    'firms-proxy',
     'rocket-launches-proxy',
     'military-installations-proxy',
     'regional-brief-proxy',

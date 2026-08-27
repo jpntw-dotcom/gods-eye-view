@@ -217,6 +217,9 @@ export class MapStackController {
 
   async _activatePhotoreal(gen) {
     this._removeImageryLayer();
+    while (this.viewer.imageryLayers.length > 0) {
+      this.viewer.imageryLayers.remove(this.viewer.imageryLayers.get(0), false);
+    }
     if (this.googleTileset) this.googleTileset.show = true;
     this.viewer.scene.globe.show = false;
     // Terrain is left UNTOUCHED here. The photoreal globe is hidden
@@ -239,6 +242,12 @@ export class MapStackController {
     // scene's imagery layers, the winning switch already owns them (M7).
     if (gen != null && gen !== this._switchGen) return;
     this._removeImageryLayer();
+    // A play/keyless boot may have seeded OSM on the Viewer constructor so
+    // the first frame is an earth, not a white ellipsoid. Drop that untracked
+    // layer before we add the stack's own copy.
+    while (this.viewer.imageryLayers.length > 0) {
+      this.viewer.imageryLayers.remove(this.viewer.imageryLayers.get(0), false);
+    }
 
     this._imageryLayer = new Cesium.ImageryLayer(provider);
     this.viewer.imageryLayers.add(this._imageryLayer, 0);

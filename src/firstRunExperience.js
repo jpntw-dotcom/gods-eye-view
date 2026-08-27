@@ -20,13 +20,14 @@
 // is enthusiasm, not "never show me this again".
 
 import { LAYER_STATE_STORAGE_KEY, parseStoredLayerState } from './data/layerState.js';
+import { PLAY_DEFAULT_LAYER_IDS, PLAY_DEFAULT_MISSION } from './playGlobe.js';
+
+export { PLAY_DEFAULT_MISSION } from './playGlobe.js';
 
 /** Durable suppression. Written ONLY by the "Don't show this again" checkbox. */
 export const FIRST_RUN_STORAGE_KEY = 'gev:first-run-mission:v1';
 /** Per-session dismissal. Written by every close path; scoped to sessionStorage. */
 export const FIRST_RUN_SESSION_KEY = 'gev:first-run-mission-session:v1';
-/** Play-skin default: Environmental. Do not start from Contacts. */
-export const PLAY_DEFAULT_MISSION = 'environmental';
 
 /**
  * Configurable name for the fires/quakes mission. Flip this ONE constant to
@@ -116,7 +117,7 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
     // machine shared by every layer and not a thing to refactor the night
     // before a launch. LEDGERED post-launch. Until it lands, keyless visitors
     // are judged on the layer row, which tells them the truth.
-    layerIds: Object.freeze(['earthquakes', 'local-firms']),
+    layerIds: PLAY_DEFAULT_LAYER_IDS,
     busyText: 'Scanning active events…',
   }),
   explore: Object.freeze({ kind: 'none' }),

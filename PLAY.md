@@ -58,14 +58,20 @@ The repo set none. Vite `server.headers` / `preview.headers` is the hook for thi
 
 ## Boot without paid keys
 
-`src/main.js` **used to throw** if `GOOGLE_MAPS_API_KEY` was missing. OSM was only a map-stack fallback *after* that key existed, not a keyless boot.
+A missing `GOOGLE_MAPS_API_KEY` must still paint a draggable earth. The Viewer used to start with `baseLayer: false` and `globe.show = false` (the photoreal path). Without a tileset that pair is a white void.
 
-This PR adds a small guard: no Google key → skip photoreal tileset → `MapStackController` starts on `osm`. We did **not** add Google Maps, OpenAI, or FIRMS keys. Photoreal Google tiles stay optional.
+`src/playGlobe.js` decides the surface: no usable Google key or no live tileset → show the globe, attach OSM immediately, fill the ellipsoid with an ocean color so the first frame is an earth even before tiles land. Photoreal may hide the ellipsoid only after Google 3D tiles are actually on the scene.
 
-FIRMS: `vite build` is static; `/api/firms` is `configureServer` only. Keyless FIRMS is honest empty (`KEY REQUIRED`). `configurePreviewServer` was not added.
+Play first-load yields the full-screen loader as soon as that earth exists, starts at full-globe camera (not Austin), skips the mission card, and does not boot voice / CCTV / AIS / military / radio. Environmental (`earthquakes` + `local-firms`) still auto-runs. FIRMS stays honest (`KEY REQUIRED`) when `FIRMS_MAP_KEY` is unset.
+
+Do **not** add Google Maps, OpenAI, or FIRMS keys to git. Photoreal stays optional.
+
+FIRMS: `/api/firms` is installed on both `configureServer` and `configurePreviewServer`. Live should be `vite build` + `npm start` (`vite preview` on `:4173`), not `npm run dev`. Keyless FIRMS is honest empty (`503 {error:'no_key'}`).
 
 ## Files touched
 
+- `src/playGlobe.js` — keyless-earth surface + play first-load policy
+- `src/playGlobe.test.mjs` — keyless-earth and play-default pins
 - `src/firstRunExperience.js` — auto-run Environmental; skip the card unless `?welcome=1`
 - `src/firstRunExperience.test.mjs` — play-skin pins
 - `src/data/localLayers.js` — do not register cables
@@ -75,9 +81,11 @@ FIRMS: `vite build` is static; `/api/firms` is `configureServer` only. Keyless F
 - `src/data/local_data/telegeography_submarine_cables/` — removed
 - `src/scenes/scenePolicy.test.mjs`, `src/scenes/director.test.mjs` — registry lists
 - `src/hud.js` — force HUD off
-- `src/main.js` — keyless OSM boot if no Google key
-- `index.html` — Dutch title/subtitle/first-run; hide unused chrome
-- `style.css` — two tokens + hide HUD/unused chrome
-- `vite.config.js` — CSP `frame-ancestors`
+- `src/main.js` — OSM earth on first paint; loader yields before HUD; no Austin / voice
+- `src/mapStackController.js` — drop constructor-seeded imagery when switching stacks
+- `index.html` — Dutch title/subtitle/first-run; `play-skin` body
+- `style.css` — two tokens + hide HUD/unused chrome; loader never eats drags
+- `vite.config.js` — CSP `frame-ancestors`; FIRMS proxy on preview
+- `package.json` — `npm start` = `vite preview` on `:4173`
 - `LICENSE` — note that this fork removed the NC cable dataset
 - `PLAY.md` — this file

@@ -2095,10 +2095,8 @@ function firmsProxy() {
     return statusInflight;
   }
 
-  return {
-    name: 'firms-proxy',
-    configureServer(server) {
-      server.middlewares.use('/api/firms', async (req, res) => {
+  function install(server) {
+    server.middlewares.use('/api/firms', async (req, res) => {
         const sendJson = (status, obj) => {
           if (res.headersSent) return;
           res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
@@ -2165,8 +2163,13 @@ function firmsProxy() {
           console.warn('[firms-proxy] error:', err?.message || err);
           sendJson(500, { error: 'firms proxy error' });
         }
-      });
-    },
+    });
+  }
+
+  return {
+    name: 'firms-proxy',
+    configureServer: install,
+    configurePreviewServer: install,
   };
 }
 
@@ -7378,6 +7381,8 @@ export default defineConfig(({ mode }) => {
       },
     },
     preview: {
+      host: env.HOST || 'localhost',
+      port: parseInt(env.PREVIEW_PORT || env.PORT, 10) || 4173,
       headers: {
         'Content-Security-Policy': "frame-ancestors 'self' https://alsditdan.com https://www.alsditdan.com https://alsditdan.nl https://www.alsditdan.nl http://localhost:4720 http://127.0.0.1:4720 http://localhost:4173 http://127.0.0.1:4173 http://localhost:5173 http://127.0.0.1:5173",
       },

@@ -9164,6 +9164,9 @@ body.scene-playback-mode #first-run-launcher {
 
 /* AlsDitDan play skin — unused chrome + classification HUD off.
    Do not restyle the rest of this file. */
+body.play-skin #loading-screen {
+  pointer-events: none;
+}
 #intel-hud,
 #intel-hud.active {
   display: none !important;
