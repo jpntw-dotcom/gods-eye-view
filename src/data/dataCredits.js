@@ -168,13 +168,6 @@ export const DATA_CREDITS = [
       '(<a href="https://earthdata.nasa.gov/firms" target="_blank" rel="noopener">earthdata.nasa.gov/firms</a>), ' +
       'part of NASA’s Earth Observing System Data and Information System (EOSDIS)',
   },
-  {
-    key: 'telegeography',
-    html:
-      'Submarine cables: © TeleGeography — ' +
-      '<a href="https://www.submarinecablemap.com" target="_blank" rel="noopener">submarinecablemap.com</a> ' +
-      '(CC BY-NC-SA 3.0 — NonCommercial)',
-  },
 ];
 
 /**

@@ -8,8 +8,10 @@ import {
   FIRST_RUN_MISSIONS,
   FIRST_RUN_SESSION_KEY,
   FIRST_RUN_STORAGE_KEY,
+  PLAY_DEFAULT_MISSION,
   environmentalLabel,
   exclusiveSurfaceActive,
+  hasStoredLayerPrefs,
   rememberFirstRunSessionDismissed,
   runFirstRunChoice,
   setFirstRunSuppressed,
@@ -420,6 +422,19 @@ test('Live Contacts and Space Missions go through the one setContextMode facade'
   }
 });
 
+test('play skin auto-runs Environmental and never starts from Contacts', () => {
+  assert.equal(PLAY_DEFAULT_MISSION, 'environmental');
+  assert.deepEqual(FIRST_RUN_MISSIONS.environmental.layerIds, ['earthquakes', 'local-firms']);
+  const module = fs.readFileSync(new URL('./firstRunExperience.js', import.meta.url), 'utf8');
+  const init = module.slice(module.indexOf('export function initFirstRunExperience'));
+  const uncommented = init.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+  assert.match(init, /runFirstRunChoice\(PLAY_DEFAULT_MISSION/);
+  assert.doesNotMatch(uncommented, /setContextMode\('contacts'\)/);
+  assert.doesNotMatch(uncommented, /setContextMode\('space-missions'\)/);
+  assert.match(init, /params\.get\('welcome'\) !== '1'/);
+  assert.equal(hasStoredLayerPrefs(memoryStorage('gev:layer-state:v2')), false);
+});
+
 test('Environmental enables BOTH its feeds and pulls out to the globe', async () => {
   const spy = missionSpy();
   const outcome = await runFirstRunChoice('environmental', spy.deps);
@@ -529,8 +544,9 @@ test('no mission writes a preference the visitor did not choose by picking it', 
   // missions — the globe missions open no panel at all.
   const panelWrites = code.match(/setPanelCollapsed/g) || [];
   assert.equal(panelWrites.length, 1, 'exactly one panel reveal, on the Context path');
-  const contextPath = code.slice(code.indexOf('setContextMode: async (mode)'), code.indexOf('setLayerEnabled:'));
-  assert.match(contextPath, /result\?\.ok[\s\S]*?setPanelCollapsed\?\.\('global-context-panel', false, \{ explicit: true \}\)/);
+  const contextPath = code.slice(code.indexOf('setContextMode: async (mode)'));
+  const cardDeps = contextPath.slice(0, contextPath.indexOf('setLayerEnabled:'));
+  assert.match(cardDeps, /result\?\.ok[\s\S]*?setPanelCollapsed\?\.\('global-context-panel', false, \{ explicit: true \}\)/);
 });
 
 test('the decision table is written down where the next editor will read it', () => {
@@ -554,22 +570,18 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   assert.match(html, /data-first-run-status[^>]*role="status"[^>]*aria-live="polite"/);
   assert.match(html, /<input type="checkbox" data-first-run-suppress \/>/);
   assert.match(html, /<strong data-first-run-environmental-title>/);
-  // Subcopy must name BOTH feeds the tile turns on — a tile that promised only
-  // half of what it does is the defect this replaced. Only the VISIBLE <small>
-  // text counts; the comment beside it naturally says the words too.
+  // Subcopy must name BOTH feeds the tile turns on. Play-skin copy is Dutch.
   const envTile = html.slice(html.indexOf('data-first-run-choice="environmental"'));
   const visible = envTile.slice(envTile.indexOf('<small>'), envTile.indexOf('</small>'));
-  assert.match(visible, /earthquakes/i);
-  assert.match(visible, /fires?/i, 'the tile must promise the fires it enables');
+  assert.match(visible, /aardbevingen/i);
+  assert.match(visible, /branden/i, 'the tile must promise the fires it enables');
 
-  // The card's one persuasive line is OWNER-AUTHORED and pinned verbatim,
-  // unspaced em dash included. This is copy, not prose to be improved in a
-  // passing edit — changing it needs the owner, not a nicer-sounding rewrite.
   assert.ok(
-    html.includes('<p id="first-run-description">It feels like a forbidden cockpit'
-      + '—then you realize the sources are public and the data is real.</p>'),
-    'the final first-run line must ship exactly as written',
+    html.includes('<p id="first-run-description">Live aardbevingen en branden. De bronnen zijn openbaar, de data is echt.</p>'),
+    'play-skin first-run line is Dutch, not the upstream cockpit line',
   );
+  assert.match(html, /data-first-run-choice="contacts" hidden/);
+  assert.match(html, /data-first-run-choice="space-missions" hidden/);
 
   // Menu order is the owner's, read straight off the markup.
   const order = [...html.matchAll(/data-first-run-choice="([a-z-]+)"/g)].map((match) => match[1]);

@@ -4,11 +4,11 @@
    ═══════════════════════════════════════════════ */
 
 :root {
-  --bg-dark: #0a0a0f;
+  --bg-dark: #0a0b0d;
   --glass-bg: rgba(12, 12, 20, 0.72);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.15);
-  --accent: #00d4ff;
+  --accent: #8fb8c2;
   --accent-dim: rgba(0, 212, 255, 0.15);
   --accent-glow: rgba(0, 212, 255, 0.4);
   --text-primary: #e8eaed;
@@ -9160,4 +9160,19 @@ body.scene-playback-mode #first-run-launcher {
   .first-run-arrow { transition: none; }
   /* Scrolling a tile into view must not animate either. */
   .first-run-choices { scroll-behavior: auto; }
+}
+
+/* AlsDitDan play skin — unused chrome + classification HUD off.
+   Do not restyle the rest of this file. */
+#intel-hud,
+#intel-hud.active {
+  display: none !important;
+}
+#global-context-flights-btn,
+#global-context-missions-btn,
+#context-mode-standby,
+#gev-voice-control,
+#cctv-panel,
+#cctv-sync-chip {
+  display: none !important;
 }
