@@ -18,6 +18,7 @@ import {
   resolvePlayGlobeSurface,
   shouldInitVoiceOnPlayStart,
   playAllowPhotorealFromLocation,
+  tunePlayImageryLayer,
 } from './playGlobe.js';
 
 test('keyless first paint is a shown OSM earth, never a hidden globe without imagery', () => {
@@ -187,4 +188,12 @@ test('photoreal is opt-in via query, never the play default', () => {
   assert.equal(playAllowPhotorealFromLocation({ search: '' }), false);
   assert.equal(playAllowPhotorealFromLocation({ search: '?welcome=1' }), false);
   assert.equal(playAllowPhotorealFromLocation({ search: '?photoreal=1' }), true);
+});
+
+test('play imagery is darkened so OSM does not read as a white void', () => {
+  const layer = {};
+  tunePlayImageryLayer(layer);
+  assert.ok(layer.brightness < 1);
+  assert.ok(layer.gamma < 1);
+  assert.equal(tunePlayImageryLayer(null), null);
 });

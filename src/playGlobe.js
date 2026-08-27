@@ -26,9 +26,9 @@ export const PLAY_DEFERRED_LAYER_IDS = Object.freeze([
 /** Ocean fill so the ellipsoid is an earth before the first OSM tile lands. */
 export const PLAY_EARTH_BASE_COLOR = '#0b1220';
 
-export const PLAY_OSM_CREDIT = '© OpenStreetMap contributors © CARTO';
+export const PLAY_OSM_CREDIT = '© OpenStreetMap contributors';
 
-export const PLAY_OSM_TILE_URL = 'https://a.basemaps.cartocdn.com/dark_all/';
+export const PLAY_OSM_TILE_URL = 'https://tile.openstreetmap.org/';
 
 /** Full-earth framing. The earth is the thing you drag — not Austin close-up. */
 export const PLAY_GLOBE_CAMERA = Object.freeze({
@@ -113,6 +113,16 @@ export function createOsmImageryOptions() {
     url: PLAY_OSM_TILE_URL,
     credit: PLAY_OSM_CREDIT,
   };
+}
+
+/** Darken washed OSM so play does not read as a white void. */
+export function tunePlayImageryLayer(layer) {
+  if (!layer) return layer;
+  layer.brightness = 0.48;
+  layer.contrast = 1.28;
+  layer.saturation = 0.42;
+  layer.gamma = 0.78;
+  return layer;
 }
 
 /**

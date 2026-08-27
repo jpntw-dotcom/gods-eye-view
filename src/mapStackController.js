@@ -1,6 +1,6 @@
 import * as Cesium from 'cesium';
 import { governorRequestRender } from './renderGovernor.js';
-import { createOsmImageryOptions } from './playGlobe.js';
+import { createOsmImageryOptions, tunePlayImageryLayer } from './playGlobe.js';
 
 export const MAP_STACKS = [
   {
@@ -251,6 +251,7 @@ export class MapStackController {
     }
 
     this._imageryLayer = new Cesium.ImageryLayer(provider);
+    tunePlayImageryLayer(this._imageryLayer);
     this.viewer.imageryLayers.add(this._imageryLayer, 0);
 
     if (this.googleTileset) this.googleTileset.show = false;
