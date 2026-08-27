@@ -589,10 +589,17 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   assert.doesNotMatch(html, /data-first-run-choice="infrastructure"/,
     'the removed tile must leave no markup behind');
 
-  const startup = main.slice(main.indexOf('void Promise.all(['), main.indexOf('// Expose for debugging'));
-  assert.match(startup, /styleManager\.initialRestorePromise/);
-  assert.ok(startup.indexOf("loadingScreen.classList.add('hidden')") < startup.indexOf('initFirstRunExperience'));
-  assert.match(startup, /initFirstRunExperience\(\{ styleManager, dataManager \}\)/);
+  assert.match(main, /hidePlayLoader\(loadingScreen\)/);
+  assert.match(main, /styleManager\.initialRestorePromise/);
+  assert.ok(
+    main.indexOf('hidePlayLoader(loadingScreen)') < main.indexOf('new StyleManager'),
+    'the play loader must yield before the cockpit HUD boots',
+  );
+  assert.ok(
+    main.indexOf('new StyleManager') < main.indexOf('initFirstRunExperience({ styleManager, dataManager })'),
+    'first-run still runs after the style manager exists',
+  );
+  assert.match(main, /initFirstRunExperience\(\{ styleManager, dataManager \}\)/);
 
   assert.match(css, /body\.ui-clean-view #first-run-launcher/);
   assert.match(css, /body\.recording-mode #first-run-launcher/);
