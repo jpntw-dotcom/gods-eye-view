@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { governorRequestRender } from './renderGovernor.js';
+import { createOsmImageryOptions } from './playGlobe.js';
 
 export const MAP_STACKS = [
   {
@@ -34,8 +35,6 @@ export const MAP_STACKS = [
   },
 ];
 
-const DEFAULT_OSM_CREDIT = '© OpenStreetMap contributors';
-
 // Keyless global ellipsoidal terrain (Re:Earth Terrain / Mapterhorn, CC BY 4.0,
 // EGM2008 geoid via NGA) — quantized-mesh 1.0, `ellipsoid` data-type. Fixes
 // regime C (keyless globe stacks previously rendered a flat
@@ -56,12 +55,14 @@ export class MapStackController {
     initialStack = 'photoreal',
     onChange = null,
     onError = null,
+    skipKeylessTerrain = false,
   } = {}) {
     this.viewer = viewer;
     this.googleTileset = googleTileset;
     this.cesiumToken = String(cesiumToken || '').trim();
     this._onChange = onChange;
     this._onError = onError;
+    this._skipKeylessTerrain = Boolean(skipKeylessTerrain);
     this._activeId = googleTileset ? initialStack : 'osm';
     this._imageryLayer = null;
     this._imageryProviders = new Map();
@@ -266,10 +267,7 @@ export class MapStackController {
     if (stack.kind === 'ion') {
       provider = await Cesium.createWorldImageryAsync({ style: stack.style });
     } else if (stack.kind === 'osm') {
-      provider = new Cesium.OpenStreetMapImageryProvider({
-        url: 'https://tile.openstreetmap.org/',
-        credit: DEFAULT_OSM_CREDIT,
-      });
+      provider = new Cesium.OpenStreetMapImageryProvider(createOsmImageryOptions());
     } else {
       throw new Error(`Unsupported map stack: ${stack.id}`);
     }
@@ -311,6 +309,11 @@ export class MapStackController {
         requestVertexNormals: true,
       }));
     } else {
+      if (this._skipKeylessTerrain) {
+        this.viewer.terrainProvider = new Cesium.EllipsoidTerrainProvider();
+        this._terrainMode = 'ellipsoid';
+        return;
+      }
       const provider = await this._getKeylessTerrainProvider();
       // A newer switch started while the Re:Earth layer.json fetch was in
       // flight — that call owns terrain now; don't stomp it (M7 pattern).
